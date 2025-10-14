@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
+import 'pages/hub_page.dart'; // <-- impor file hub
 
-void main() { 
-  runApp(const ResembleApp());
+void main() {
+  runApp(const MyApp());
 }
 
-class ResembleApp extends StatelessWidget {
-  const ResembleApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'AI Voice Studio',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
-        useMaterial3: true,
-      ),
-      home: const HomePage(),
+      title: 'APP AI',
+      theme: ThemeData(useMaterial3: true),
+      home: const HubPage(), // <-- ini penting
     );
   }
 }
