@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/hub_page.dart'; // <-- impor file hub
+import 'pages/hub_page.dart'; // pastikan path benar
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'APP AI',
       theme: ThemeData(useMaterial3: true),
-      home: const HubPage(), // <-- ini penting
+      home: const HubPage(), // ⬅️ balik lagi ke HubPage!
     );
   }
 }

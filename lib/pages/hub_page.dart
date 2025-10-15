@@ -7,10 +7,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../pages/text_to_speech_page.dart';
+import 'text_to_speech_page.dart';
 
-/// ===== Helper: Base URL adaptif (web / emulator / device) =====
+
+/// ======================================================
+/// 🧩 BASE SETUP: API BASE ADAPTIVE
+/// ======================================================
 String apiBase() {
-  const localIp = '192.168.10.146'; // GANTI jika IP laptop berubah
+  const localIp = '192.168.10.146'; // Ganti dengan IP laptop kamu
   if (kIsWeb) return 'http://localhost:3000';
   try {
     if (Platform.isAndroid) return 'http://10.0.2.2:3000';
@@ -18,9 +23,23 @@ String apiBase() {
   return 'http://$localIp:3000';
 }
 
-/// ===== Enum menu =====
-enum HubMenu { tts, stt, widgets, editing, enhance, history, voices, createVoice }
+/// ======================================================
+/// 🧭 ENUM MENU
+/// ======================================================
+enum HubMenu {
+  tts,
+  stt,
+  widgets,
+  editing,
+  enhance,
+  history,
+  voices,
+  createVoice,
+}
 
+/// ======================================================
+/// 🏠 HUB PAGE UTAMA
+/// ======================================================
 class HubPage extends StatefulWidget {
   const HubPage({super.key});
 
@@ -30,99 +49,137 @@ class HubPage extends StatefulWidget {
 
 class _HubPageState extends State<HubPage> {
   HubMenu _selected = HubMenu.tts;
+  bool _isCollapsed = false;
+
+  void _toggleSidebar() => setState(() => _isCollapsed = !_isCollapsed);
 
   @override
   Widget build(BuildContext context) {
-    final isNarrow = MediaQuery.of(context).size.width < 900;
+    final isMobile = MediaQuery.of(context).size.width < 900;
 
-    if (isNarrow) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 1,
-          iconTheme: const IconThemeData(color: Colors.black),
-          title: Text(
-            'RESEMBLE.AI',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF00C47D),
-            ),
-          ),
-        ),
-        drawer: _SideNav(
-          selected: _selected,
-          onSelect: (m) => setState(() => _selected = m),
-        ),
-        body: _ContentArea(selected: _selected),
-      );
-    }
-
-    // Desktop/Web style: sidebar permanen
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Row(
-          children: [
-            SizedBox(
-              width: 280,
-              child: _SideNav(
-                selected: _selected,
-                onSelect: (m) => setState(() => _selected = m),
+      appBar: isMobile
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 1,
+              iconTheme: const IconThemeData(color: Colors.black),
+              title: Text(
+                'RESEMBLE.AI',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF00C47D),
+                ),
               ),
-            ),
-            Container(width: 1, color: Colors.grey.shade200),
-            Expanded(child: _ContentArea(selected: _selected)),
-          ],
-        ),
+            )
+          : null,
+      drawer: isMobile
+          ? _SideNav(
+              selected: _selected,
+              onSelect: (m) => setState(() => _selected = m),
+              isCollapsed: false,
+              onToggle: _toggleSidebar,
+              isMobile: true,
+            )
+          : null,
+      body: SafeArea(
+        child: isMobile
+            ? _ContentArea(selected: _selected)
+            : Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: _isCollapsed ? 70 : 280,
+                    child: _SideNav(
+                      selected: _selected,
+                      onSelect: (m) => setState(() => _selected = m),
+                      isCollapsed: _isCollapsed,
+                      onToggle: _toggleSidebar,
+                      isMobile: false,
+                    ),
+                  ),
+                  Container(width: 1, color: Colors.grey.shade200),
+                  Expanded(child: _ContentArea(selected: _selected)),
+                ],
+              ),
       ),
     );
   }
 }
 
-/// ---------------- Sidebar permanen ----------------
+/// ======================================================
+/// 📂 SIDENAV (NAVIGASI KIRI)
+/// ======================================================
 class _SideNav extends StatelessWidget {
-  const _SideNav({required this.selected, required this.onSelect});
+  const _SideNav({
+    required this.selected,
+    required this.onSelect,
+    required this.isCollapsed,
+    required this.onToggle,
+    required this.isMobile,
+  });
 
   final HubMenu selected;
   final ValueChanged<HubMenu> onSelect;
+  final bool isCollapsed;
+  final VoidCallback onToggle;
+  final bool isMobile;
 
-  Widget _sectionHeader(String text) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
-        child: Text(
-          text.toUpperCase(),
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey,
+  Widget _section(String text) => isCollapsed
+      ? const SizedBox.shrink()
+      : Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 0, 6),
+          child: Text(
+            text.toUpperCase(),
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
           ),
-        ),
-      );
+        );
 
-  Widget _item(HubMenu m, IconData icon, String label) {
-    final active = selected == m;
+  Widget _item(BuildContext context, HubMenu menu, IconData icon, String label) {
+    final active = selected == menu;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
-        onTap: () => onSelect(m),
-        child: Container(
+        onTap: () {
+          onSelect(menu);
+          if (isMobile) Navigator.pop(context);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
             color: active ? const Color(0xFFE9F9F1) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: EdgeInsets.symmetric(
+              horizontal: isCollapsed ? 0 : 12, vertical: 12),
           child: Row(
+            mainAxisAlignment: isCollapsed
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: [
-              Icon(icon, size: 20, color: active ? const Color(0xFF00C47D) : Colors.black87),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: active ? const Color(0xFF00C47D) : Colors.black87,
+              Icon(icon,
+                  color:
+                      active ? const Color(0xFF00C47D) : Colors.grey.shade700),
+              if (!isCollapsed) ...[
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight:
+                          active ? FontWeight.w600 : FontWeight.normal,
+                      color:
+                          active ? const Color(0xFF00C47D) : Colors.black87,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -132,475 +189,204 @@ class _SideNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Container(
       color: Colors.white,
-      child: ListView(
+      child: Column(
         children: [
+          // Expand button di atas logo
+          if (isCollapsed)
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: onToggle,
+              tooltip: 'Expand sidebar',
+            ),
+
+          // Logo
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            padding:
+                EdgeInsets.fromLTRB(isCollapsed ? 0 : 20, 10, 20, isCollapsed ? 4 : 8),
             child: Row(
+              mainAxisAlignment: isCollapsed
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
                 const Icon(Icons.graphic_eq, color: Color(0xFF00C47D)),
-                const SizedBox(width: 8),
-                Text(
-                  'RESEMBLE.AI',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF00C47D),
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.lock_outline, size: 18, color: Colors.black54),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          _sectionHeader('Playground'),
-          _item(HubMenu.tts, Icons.volume_up, 'Text-to-Speech'),
-          _item(HubMenu.stt, Icons.keyboard_voice, 'Speech-to-Text'),
-          _item(HubMenu.widgets, Icons.widgets, 'Widgets'),
-          _item(HubMenu.editing, Icons.music_note, 'Audio Editing'),
-          _item(HubMenu.enhance, Icons.auto_fix_high, 'Audio Enhancement'),
-          _item(HubMenu.history, Icons.history, 'History'),
-          _sectionHeader('Voice Design'),
-          _item(HubMenu.voices, Icons.record_voice_over, 'My Voices'),
-          _item(HubMenu.createVoice, Icons.add_circle_outline, 'Create New Voice'),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Divider(color: Colors.grey.shade200, height: 1),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: const Color(0xFF00C47D),
-                  child: Text(
-                    'R',
+                if (!isCollapsed) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    "RESEMBLE.AI",
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF00C47D),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'rafhiardianzah@gmail.com',
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.menu_open, color: Colors.black54),
+                    onPressed: onToggle,
+                    tooltip: 'Collapse sidebar',
                   ),
-                ),
-                const Icon(Icons.settings, size: 18, color: Colors.black45),
-                const SizedBox(width: 8),
-                const Icon(Icons.notifications_none, size: 18, color: Colors.black45),
+                ],
               ],
             ),
-          )
+          ),
+          const Divider(height: 1),
+
+          Expanded(
+            child: ListView(
+              children: [
+                _section('Playground'),
+                _item(context, HubMenu.tts, Icons.volume_up, 'Text-to-Speech'),
+                _item(context, HubMenu.stt, Icons.mic, 'Speech-to-Text'),
+                _item(context, HubMenu.widgets, Icons.widgets, 'Widgets'),
+                _item(context, HubMenu.editing, Icons.music_note, 'Audio Editing'),
+                _item(context, HubMenu.enhance, Icons.auto_fix_high, 'Audio Enhancement'),
+                _item(context, HubMenu.history, Icons.history, 'History'),
+                _section('Voice Design'),
+                _item(context, HubMenu.voices, Icons.record_voice_over, 'My Voices'),
+                _item(context, HubMenu.createVoice, Icons.add_circle_outline, 'Create Voice'),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// ---------------- Area konten kanan ----------------
+/// ======================================================
+/// 🖥️ CONTENT AREA
+/// ======================================================
 class _ContentArea extends StatelessWidget {
   const _ContentArea({required this.selected});
   final HubMenu selected;
 
   @override
   Widget build(BuildContext context) {
-    Widget header({required String title, Widget? right}) {
-      return Container(
-        height: 64,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title,
-                style: GoogleFonts.poppins(
-                    fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87)),
-            right ?? const SizedBox.shrink(),
-          ],
-        ),
-      );
-    }
-
-    final searchAndNew = Row(
-      children: [
-        SizedBox(
-          width: 260,
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: "Search transcripts",
-              hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[500]),
-              prefixIcon: const Icon(Icons.search, size: 20),
-              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        ElevatedButton.icon(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('New Transcript: coming soon')),
-            );
-          },
-          icon: const Icon(Icons.add, color: Colors.white, size: 18),
-          label: Text(
-            "New Transcript",
-            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00C47D),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
-      ],
-    );
-
-    final pages = {
-      HubMenu.tts: Column(
-        children: [
-          header(title: 'Text-to-Speech'),
-          const Expanded(child: _TtsView()),
-        ],
-      ),
-      HubMenu.stt: Column(
-        children: [
-          header(title: 'Speech-to-Text', right: searchAndNew),
-          const Expanded(child: _SttView()),
-        ],
-      ),
-      HubMenu.widgets: _PlaceholderPage('Widgets'),
-      HubMenu.editing: _PlaceholderPage('Audio Editing'),
-      HubMenu.enhance: _PlaceholderPage('Audio Enhancement'),
-      HubMenu.history: _PlaceholderPage('History'),
-      HubMenu.voices: _PlaceholderPage('My Voices'),
-      HubMenu.createVoice: _PlaceholderPage('Create New Voice'),
+    final Map<HubMenu, Widget> pages = {
+      HubMenu.tts: const TextToSpeechPage(),
+      HubMenu.stt: const _SttPage(),
+      HubMenu.widgets: const _PlaceholderPage('Widgets'),
+      HubMenu.editing: const _PlaceholderPage('Audio Editing'),
+      HubMenu.enhance: const _PlaceholderPage('Audio Enhancement'),
+      HubMenu.history: const _PlaceholderPage('History'),
+      HubMenu.voices: const _PlaceholderPage('My Voices'),
+      HubMenu.createVoice: const _PlaceholderPage('Create New Voice'),
     };
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 250),
       child: pages[selected]!,
     );
   }
 }
 
-/// ---------------- TTS View ----------------
-class _TtsView extends StatefulWidget {
-  const _TtsView();
+/// ======================================================
+/// 🔊 TEXT TO SPEECH PAGE
+/// ======================================================
+
+/// ======================================================
+/// 🎙 SPEECH TO TEXT PAGE
+/// ======================================================
+class _SttPage extends StatefulWidget {
+  const _SttPage();
 
   @override
-  State<_TtsView> createState() => _TtsViewState();
+  State<_SttPage> createState() => _SttPageState();
 }
 
-class _TtsViewState extends State<_TtsView> {
-  final _textController = TextEditingController();
-  final _player = AudioPlayer();
-  String? _selectedVoice;
-  bool _isLoading = false;
+class _SttPageState extends State<_SttPage> {
+  bool uploading = false;
+  String? result;
 
-  Future<void> _generateVoice() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Masukkan teks terlebih dahulu')));
-      return;
-    }
+  Future<void> _pickAndTranscribe() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp3', 'wav', 'm4a', 'aac'],
+      withData: kIsWeb,
+    );
+    if (picked == null) return;
 
-    setState(() => _isLoading = true);
+    setState(() => uploading = true);
+
     try {
-      final resp = await http.post(
-        Uri.parse('${apiBase()}/api/tts'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'text': text}),
-      );
+      final file = picked.files.first;
+      final uri = Uri.parse('${apiBase()}/api/stt');
+      final req = http.MultipartRequest('POST', uri);
 
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        String? audioUrl;
-        if (data['output'] is String) {
-          audioUrl = data['output'];
-        } else if (data['output'] is List && data['output'].isNotEmpty) {
-          audioUrl = data['output'][0];
-        }
-        if (audioUrl == null) throw Exception('Output audio tidak ditemukan');
-
-        await _player.setUrl(audioUrl);
-        await _player.play();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('✅ Audio berhasil diputar!')));
+      if (kIsWeb) {
+        req.files.add(
+            http.MultipartFile.fromBytes('audio', file.bytes!, filename: file.name));
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('❌ Gagal: ${resp.body}')));
+        req.files.add(await http.MultipartFile.fromPath('audio', file.path!));
+      }
+
+      final res = await req.send();
+      final body = await res.stream.bytesToString();
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(body);
+        setState(() => result = data['output'] ?? '(kosong)');
+      } else {
+        setState(() => result = 'Gagal: $body');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('⚠️ Error: $e')));
+      setState(() => result = 'Error: $e');
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => uploading = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    _player.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            value: _selectedVoice,
-            items: const [
-              DropdownMenuItem(value: 'Ember', child: Text('Ember')),
-              DropdownMenuItem(value: 'Create a voice', child: Text('Create a voice')),
-            ],
-            onChanged: (v) => setState(() => _selectedVoice = v),
-            hint: const Text('Select a voice'),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _textController,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              hintText: 'Start typing your transcript here...',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final tag in [
-                'Professional Advertisement Voiceover',
-                'Natural Conversation',
-                'Emotional Storytelling',
-                'Inspirational Travel Vlog',
-                'Customer Service Agent',
-                'Podcast Intro',
-                'E-learning Narrator',
-                'Character Voice',
-              ])
-                GestureDetector(
-                  onTap: () => _textController.text = tag,
-                  child: Chip(label: Text(tag), backgroundColor: Colors.grey[200]),
-                ),
-            ],
-          ),
-          const Spacer(),
-          Center(
-            child: _isLoading
-                ? const CircularProgressIndicator(color: Colors.green)
-                : IconButton(
-                    icon: const Icon(Icons.play_circle_fill, size: 48, color: Colors.green),
-                    onPressed: _generateVoice,
+      child: Center(
+        child: uploading
+            ? const CircularProgressIndicator(color: Colors.green)
+            : result == null
+                ? ElevatedButton.icon(
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Upload audio untuk diubah ke teks'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00C47D),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 16),
+                    ),
+                    onPressed: _pickAndTranscribe,
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Text(result!,
+                            style: GoogleFonts.poppins(fontSize: 16)),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: _pickAndTranscribe,
+                          child: const Text('Upload lagi'),
+                        ),
+                      ],
+                    ),
                   ),
-          ),
-        ],
       ),
     );
   }
 }
 
-/// ---------------- STT View (Upload berfungsi) ----------------
-class _SttView extends StatefulWidget {
-  const _SttView();
-
-  @override
-  State<_SttView> createState() => _SttViewState();
-}
-
-class _SttViewState extends State<_SttView> {
-  bool _uploading = false;
-  String? _transcript;
-
-  Future<void> _pickAndUpload() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['m4a','mp3','wav','aac','ogg','flac','mp4','mov','mkv'],
-        withData: kIsWeb,
-      );
-      if (result == null || result.files.isEmpty) return;
-
-      final file = result.files.first;
-      setState(() {
-        _uploading = true;
-        _transcript = null;
-      });
-
-      final uri = Uri.parse('${apiBase()}/api/stt');
-      final req = http.MultipartRequest('POST', uri)..fields['language'] = 'auto';
-
-      if (kIsWeb) {
-        req.files.add(http.MultipartFile.fromBytes('audio', file.bytes!, filename: file.name));
-      } else {
-        req.files.add(await http.MultipartFile.fromPath('audio', file.path!));
-      }
-
-      final resp = await req.send();
-      final body = await resp.stream.bytesToString();
-
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(body);
-        setState(() {
-          _transcript = (data['output'] ?? '').toString().trim().isEmpty
-              ? '(Transkrip kosong)'
-              : data['output'].toString();
-        });
-      } else {
-        setState(() => _transcript = 'Gagal: $body');
-      }
-    } catch (e) {
-      setState(() => _transcript = 'Error: $e');
-    } finally {
-      if (mounted) setState(() => _uploading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final emptyPanel = Container(
-      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.insert_drive_file_outlined, size: 90, color: Colors.grey[400]),
-          const SizedBox(height: 20),
-          Text("No transcripts yet",
-              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87)),
-          const SizedBox(height: 8),
-          Text(
-            "Upload your first audio or video file to get started with\nspeech-to-text transcription.",
-            style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton.icon(
-            onPressed: _uploading ? null : _pickAndUpload,
-            icon: const Icon(Icons.upload_file, color: Colors.white),
-            label: Text(
-              _uploading ? "Uploading..." : "Upload Your First File",
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00C47D),
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          ),
-          if (_uploading) ...[
-            const SizedBox(height: 16),
-            const CircularProgressIndicator(color: Color(0xFF00C47D)),
-          ],
-        ],
-      ),
-    );
-
-    final transcriptPanel = Container(
-      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.description_outlined, color: Colors.grey[700]),
-              const SizedBox(width: 8),
-              Text('Transcript Result',
-                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: _uploading ? null : _pickAndUpload,
-                icon: const Icon(Icons.upload_file),
-                label: const Text('Upload Another'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            constraints: const BoxConstraints(minHeight: 180),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
-            ),
-            child: SingleChildScrollView(
-              child: Text(
-                _transcript ?? '',
-                style: GoogleFonts.poppins(fontSize: 14.5, height: 1.5),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    return Center(child: _transcript == null ? emptyPanel : transcriptPanel);
-  }
-}
-
-/// ---------------- Placeholder ----------------
+/// ======================================================
+/// 📄 PLACEHOLDER
+/// ======================================================
 class _PlaceholderPage extends StatelessWidget {
   const _PlaceholderPage(this.title);
   final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-          ),
-          alignment: Alignment.centerLeft,
-          child: Text(title,
-              style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600)),
-        ),
-        Expanded(
-          child: Center(
-            child: Text('$title: coming soon', style: GoogleFonts.poppins(color: Colors.black54)),
-          ),
-        ),
-      ],
+    return Center(
+      child: Text('$title: Coming soon...',
+          style: GoogleFonts.poppins(color: Colors.grey)),
     );
   }
 }

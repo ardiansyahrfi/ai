@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // Halaman
-import '../pages/home_page.dart';
+import '../pages/text_to_speech_page.dart';
 import '../pages/speech_to_text.dart';
 
 class SidebarMenu extends StatelessWidget {
@@ -58,7 +58,7 @@ class SidebarMenu extends StatelessWidget {
                   context,
                   Icons.volume_up,
                   'Text-to-Speech',
-                  () => _go(context, const HomePage(), replace: true),
+                  () => _go(context, const TextToSpeechPage(), replace: true),
                 ),
 
                 // Voice Changer (placeholder)
@@ -75,13 +75,12 @@ class SidebarMenu extends StatelessWidget {
                   },
                 ),
 
-                // ===== Speech-to-Text → buka halaman STT =====
-                _buildMenuItem(
-                  context,
-                  Icons.keyboard_voice,
-                  'Speech-to-Text',
-                  () => _go(context, const SpeechToTextPage()),
-                ),
+               _buildMenuItem(
+                context,
+                Icons.keyboard_voice,
+                'Speech-to-Text',
+                () => _go(context, const SpeechToTextPage()),
+              ),
 
                 // Widgets (placeholder)
                 _buildMenuItem(
