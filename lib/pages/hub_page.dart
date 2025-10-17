@@ -5,16 +5,15 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../pages/text_to_speech_page.dart';
 
-
 /// ======================================================
-/// 🧩 BASE SETUP: API BASE ADAPTIVE
+/// BASE URL ADAPTIF (web / emulator / device fisik)
 /// ======================================================
 String apiBase() {
-  const localIp = '192.168.10.146'; // Ganti dengan IP laptop kamu
+  const localIp = '192.168.100.89'; // ← ganti jika IP laptop berubah
   if (kIsWeb) return 'http://localhost:3000';
   try {
     if (Platform.isAndroid) return 'http://10.0.2.2:3000';
@@ -23,21 +22,12 @@ String apiBase() {
 }
 
 /// ======================================================
-/// 🧭 ENUM MENU
+/// ENUM MENU
 /// ======================================================
-enum HubMenu {
-  tts,
-  stt,
-  widgets,
-  editing,
-  enhance,
-  history,
-  voices,
-  createVoice,
-}
+enum HubMenu { tts, stt, widgets, editing, enhance, history, voices, createVoice }
 
 /// ======================================================
-/// 🏠 HUB PAGE UTAMA
+/// HUB PAGE
 /// ======================================================
 class HubPage extends StatefulWidget {
   const HubPage({super.key});
@@ -63,13 +53,11 @@ class _HubPageState extends State<HubPage> {
               backgroundColor: Colors.white,
               elevation: 1,
               iconTheme: const IconThemeData(color: Colors.black),
-              title: Text(
-                'RESEMBLE.AI',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF00C47D),
-                ),
-              ),
+              title: Text('RESEMBLE.AI',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF00C47D),
+                  )),
             )
           : null,
       drawer: isMobile
@@ -107,7 +95,7 @@ class _HubPageState extends State<HubPage> {
 }
 
 /// ======================================================
-/// 📂 SIDENAV (NAVIGASI KIRI)
+/// SIDENAV
 /// ======================================================
 class _SideNav extends StatelessWidget {
   const _SideNav({
@@ -128,14 +116,9 @@ class _SideNav extends StatelessWidget {
       ? const SizedBox.shrink()
       : Padding(
           padding: const EdgeInsets.fromLTRB(20, 14, 0, 6),
-          child: Text(
-            text.toUpperCase(),
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
-            ),
-          ),
+          child: Text(text.toUpperCase(),
+              style: GoogleFonts.poppins(
+                  fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
         );
 
   Widget _item(BuildContext context, HubMenu menu, IconData icon, String label) {
@@ -157,13 +140,11 @@ class _SideNav extends StatelessWidget {
           padding: EdgeInsets.symmetric(
               horizontal: isCollapsed ? 0 : 12, vertical: 12),
           child: Row(
-            mainAxisAlignment: isCollapsed
-                ? MainAxisAlignment.center
-                : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
             children: [
               Icon(icon,
-                  color:
-                      active ? const Color(0xFF00C47D) : Colors.grey.shade700),
+                  color: active ? const Color(0xFF00C47D) : Colors.grey.shade700),
               if (!isCollapsed) ...[
                 const SizedBox(width: 12),
                 Flexible(
@@ -171,10 +152,8 @@ class _SideNav extends StatelessWidget {
                     label,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      fontWeight:
-                          active ? FontWeight.w600 : FontWeight.normal,
-                      color:
-                          active ? const Color(0xFF00C47D) : Colors.black87,
+                      fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                      color: active ? const Color(0xFF00C47D) : Colors.black87,
                     ),
                   ),
                 ),
@@ -192,34 +171,27 @@ class _SideNav extends StatelessWidget {
       color: Colors.white,
       child: Column(
         children: [
-          // Expand button di atas logo
           if (isCollapsed)
             IconButton(
               icon: const Icon(Icons.chevron_right),
               onPressed: onToggle,
               tooltip: 'Expand sidebar',
             ),
-
-          // Logo
           Padding(
             padding:
                 EdgeInsets.fromLTRB(isCollapsed ? 0 : 20, 10, 20, isCollapsed ? 4 : 8),
             child: Row(
-              mainAxisAlignment: isCollapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
+              mainAxisAlignment:
+                  isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
               children: [
                 const Icon(Icons.graphic_eq, color: Color(0xFF00C47D)),
                 if (!isCollapsed) ...[
                   const SizedBox(width: 8),
-                  Text(
-                    "RESEMBLE.AI",
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFF00C47D),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text("RESEMBLE.AI",
+                      style: GoogleFonts.poppins(
+                          color: const Color(0xFF00C47D),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.menu_open, color: Colors.black54),
@@ -231,7 +203,6 @@ class _SideNav extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-
           Expanded(
             child: ListView(
               children: [
@@ -255,7 +226,7 @@ class _SideNav extends StatelessWidget {
 }
 
 /// ======================================================
-/// 🖥️ CONTENT AREA
+/// CONTENT AREA
 /// ======================================================
 class _ContentArea extends StatelessWidget {
   const _ContentArea({required this.selected});
@@ -282,11 +253,7 @@ class _ContentArea extends StatelessWidget {
 }
 
 /// ======================================================
-/// 🔊 TEXT TO SPEECH PAGE
-/// ======================================================
-
-/// ======================================================
-/// 🎙 SPEECH TO TEXT PAGE
+/// STT PAGE (UI mirip Resemble + upload jalan)
 /// ======================================================
 class _SttPage extends StatefulWidget {
   const _SttPage();
@@ -296,86 +263,235 @@ class _SttPage extends StatefulWidget {
 }
 
 class _SttPageState extends State<_SttPage> {
-  bool uploading = false;
-  String? result;
+  bool _uploading = false;
+  String? _transcript;
 
   Future<void> _pickAndTranscribe() async {
     final picked = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['mp3', 'wav', 'm4a', 'aac'],
+      allowedExtensions: [
+        'm4a', 'mp3', 'wav', 'aac', 'ogg', 'flac', // audio
+        'mp4', 'mov', 'mkv'                        // video
+      ],
       withData: kIsWeb,
     );
     if (picked == null) return;
 
-    setState(() => uploading = true);
+    final file = picked.files.first;
+    setState(() {
+      _uploading = true;
+      _transcript = null;
+    });
 
     try {
-      final file = picked.files.first;
-      final uri = Uri.parse('${apiBase()}/api/stt');
-      final req = http.MultipartRequest('POST', uri);
+      // otomatis pilih endpoint sesuai ukuran
+      final isBig = (file.size != null) && (file.size! >= 20 * 1024 * 1024);
+      final uri = Uri.parse(
+          '${apiBase()}${isBig ? '/api/stt/long-sync' : '/api/stt'}');
+
+      final req = http.MultipartRequest('POST', uri)
+        ..fields['language'] = 'auto';
+
+      if (isBig) {
+        // opsi segment untuk long-sync, biar cepat
+        req.fields['segment'] = '300'; // 5 menit per segmen
+      }
 
       if (kIsWeb) {
-        req.files.add(
-            http.MultipartFile.fromBytes('audio', file.bytes!, filename: file.name));
+        req.files.add(http.MultipartFile.fromBytes(
+          'audio',
+          file.bytes!,
+          filename: file.name,
+        ));
       } else {
         req.files.add(await http.MultipartFile.fromPath('audio', file.path!));
       }
 
-      final res = await req.send();
-      final body = await res.stream.bytesToString();
+      final resp = await req.send();
+      final body = await resp.stream.bytesToString();
 
-      if (res.statusCode == 200) {
+      if (resp.statusCode == 200) {
         final data = jsonDecode(body);
-        setState(() => result = data['output'] ?? '(kosong)');
+        setState(() {
+          final out = data['output']?.toString() ?? '';
+          _transcript = out.trim().isEmpty ? '(Transkrip kosong)' : out;
+        });
       } else {
-        setState(() => result = 'Gagal: $body');
+        setState(() => _transcript = 'Gagal: $body');
       }
     } catch (e) {
-      setState(() => result = 'Error: $e');
+      setState(() => _transcript = 'Error: $e');
     } finally {
-      setState(() => uploading = false);
+      if (mounted) setState(() => _uploading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: uploading
-            ? const CircularProgressIndicator(color: Colors.green)
-            : result == null
-                ? ElevatedButton.icon(
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Upload audio untuk diubah ke teks'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00C47D),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
-                    ),
-                    onPressed: _pickAndTranscribe,
-                  )
-                : SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Text(result!,
-                            style: GoogleFonts.poppins(fontSize: 16)),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: _pickAndTranscribe,
-                          child: const Text('Upload lagi'),
-                        ),
-                      ],
+    // Header: title + search + New Transcript
+    Widget header() {
+      return Container(
+        height: 64,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Speech-to-Text',
+                style: GoogleFonts.poppins(
+                    fontSize: 20, fontWeight: FontWeight.w600)),
+            Row(
+              children: [
+                SizedBox(
+                  width: 260,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: "Search transcripts",
+                      hintStyle: GoogleFonts.poppins(
+                          fontSize: 13, color: Colors.grey[500]),
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
                     ),
                   ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _uploading ? null : _pickAndTranscribe,
+                  icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                  label: Text("New Transcript",
+                      style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00C47D),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    final emptyPanel = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
       ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.insert_drive_file_outlined, size: 90, color: Colors.grey[400]),
+          const SizedBox(height: 20),
+          Text("No transcripts yet",
+              style: GoogleFonts.poppins(
+                  fontSize: 20, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Text(
+            "Upload your first audio or video file to get started with\nspeech-to-text transcription.",
+            style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton.icon(
+            onPressed: _uploading ? null : _pickAndTranscribe,
+            icon: const Icon(Icons.upload_file, color: Colors.white),
+            label: Text(
+              _uploading ? "Uploading..." : "Upload Your First File",
+              style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600, color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00C47D),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          if (_uploading) ...[
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(color: Color(0xFF00C47D)),
+          ],
+        ],
+      ),
+    );
+
+    final transcriptPanel = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.description_outlined, color: Colors.grey[700]),
+              const SizedBox(width: 8),
+              Text('Transcript Result',
+                  style: GoogleFonts.poppins(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _uploading ? null : _pickAndTranscribe,
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Upload Another'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            constraints: const BoxConstraints(minHeight: 180),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                _transcript ?? '',
+                style: GoogleFonts.poppins(fontSize: 14.5, height: 1.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      children: [
+        header(),
+        Expanded(
+          child: Center(
+            child: _transcript == null ? emptyPanel : transcriptPanel,
+          ),
+        ),
+      ],
     );
   }
 }
 
 /// ======================================================
-/// 📄 PLACEHOLDER
+/// PLACEHOLDER
 /// ======================================================
 class _PlaceholderPage extends StatelessWidget {
   const _PlaceholderPage(this.title);
